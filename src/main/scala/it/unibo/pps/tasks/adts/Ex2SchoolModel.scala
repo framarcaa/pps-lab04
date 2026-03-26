@@ -112,21 +112,43 @@ object SchoolModel:
        */
       def hasCourse(name: String): Boolean
   object BasicSchoolModule extends SchoolModule:
-    override type School = Nothing
-    override type Teacher = Nothing
-    override type Course = Nothing
+    override type School = (Sequence[Teacher], Sequence[Course], Sequence[(Teacher, Course)])
+    override type Teacher = String
+    override type Course = String
 
-    def teacher(name: String): Teacher = ???
-    def course(name: String): Course = ???
-    def emptySchool: School = ???
+    def teacher(name: String): Teacher = name
+    def course(name: String): Course = name
+    def emptySchool: School = (Nil(), Nil(), Nil())
 
     extension (school: School)
-      def courses: Sequence[String] = ???
-      def teachers: Sequence[String] = ???
-      def setTeacherToCourse(teacher: Teacher, course: Course): School = ???
-      def coursesOfATeacher(teacher: Teacher): Sequence[Course] = ???
-      def hasTeacher(name: String): Boolean = ???
-      def hasCourse(name: String): Boolean = ???
+      def courses: Sequence[String] = school._2
+      def teachers: Sequence[String] = school._1
+
+      def setTeacherToCourse(teacher: Teacher, course: Course): School =
+        val newTeachers = if school.teachers.filter(x => x == teacher) == Nil()
+          then {
+            Cons(teacher, school.teachers)
+          } else school.teachers
+        val newCourse = if school.courses.filter(x => x == course) == Nil()
+          then {
+          Cons(course, school.courses)
+        } else school.courses
+        val newTeacherToCourse =
+          if school.teachers.filter(x => x == teacher) == Nil()
+            || school.courses.filter(x => x == course) == Nil()
+          then Cons((teacher, course), school._3)
+          else school._3
+        (newTeachers, newCourse, newTeacherToCourse)
+
+      def coursesOfATeacher(teacher: Teacher): Sequence[Course] =
+        school._3.filter((t,c) => t == teacher).map((t,c) => c)
+
+      def hasTeacher(name: String): Boolean =
+        school.teachers.filter(x => x == name) != Nil()
+
+      def hasCourse(name: String): Boolean =
+        school.courses.filter(x => x == name) != Nil()
+
 @main def examples(): Unit =
   import SchoolModel.BasicSchoolModule.*
   val school = emptySchool
@@ -150,5 +172,7 @@ object SchoolModel:
   println(school3.hasCourse("Math")) // true
   println(school3.hasCourse("Italian")) // true
   println(school3.coursesOfATeacher(john)) // Cons("Math", Cons("Italian", Nil()))
+
+
 
 
